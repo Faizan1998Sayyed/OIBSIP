@@ -1,0 +1,22 @@
+# Python Bytecode & Cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual Environments
+venv/
+env/
+ENV/
+
+# Environment Variables & IDE
+.env
+.vscode/
+.idea/
+
+# Local SQLite Database (auto-generated on app start)
+bmi_records.db
+
+# OS specific files
+Thumbs.db
+.DS_Store
