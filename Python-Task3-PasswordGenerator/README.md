@@ -7,6 +7,7 @@
 * **Project Name:** Advanced Password Generator
 * **Target Path:** `OIBSIP/Python-Task3-PasswordGenerator/`
 * **Intern Name:** Faizan Sayyed
+* **Live Demo:** [https://faizan1998sayyed.github.io/OIBSIP/Python-Task3-PasswordGenerator/](https://faizan1998sayyed.github.io/OIBSIP/Python-Task3-PasswordGenerator/)
 
 ---
 

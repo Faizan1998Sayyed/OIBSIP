@@ -6,6 +6,7 @@
 * **Task:** Task 2 — BMI Calculator
 * **Project Name:** Smart BMI Calculator
 * **Target Path:** `OIBSIP/Python-Task2-BMICalculator/`
+* **Live Demo:** [https://faizan1998sayyed.github.io/OIBSIP/Python-Task2-BMICalculator/](https://faizan1998sayyed.github.io/OIBSIP/Python-Task2-BMICalculator/)
 
 ---
 

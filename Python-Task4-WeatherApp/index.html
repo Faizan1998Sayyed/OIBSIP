@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Basic Weather App — Live Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f7fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card-custom { border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: none; }
+        .temp-display { font-size: 3.5rem; font-weight: 800; color: #1a202c; }
+        .forecast-card { border-radius: 10px; background: #ffffff; border: 1px solid #e2e8f0; text-align: center; padding: 12px; }
+    </style>
+</head>
+<body class="py-4">
+    <div class="container" style="max-width: 900px;">
+        <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
+            <div>
+                <h3 class="fw-bold mb-0 text-primary">🌤️ BASIC WEATHER APP</h3>
+                <small class="text-muted">OASIS INFOBYTE SIP — Task 4 • Created by Faizan Sayyed</small>
+            </div>
+            <div class="d-flex gap-2">
+                <button id="btnAutoLoc" class="btn btn-outline-secondary">📍 Auto Location</button>
+                <button id="btnToggleUnit" class="btn btn-primary fw-bold">Unit: °C / °F</button>
+                <a href="https://github.com/Faizan1998Sayyed/OIBSIP/tree/main/Python-Task4-WeatherApp" target="_blank" class="btn btn-outline-dark fw-bold">📂 GitHub</a>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="card card-custom p-4 bg-white mb-4">
+            <div id="alertBox" class="alert alert-danger d-none mb-3"></div>
+            <form id="searchForm">
+                <div class="input-group input-group-lg">
+                    <input type="text" id="cityInput" class="form-control" placeholder="Enter City Name (e.g. Mumbai, London, New York, Tokyo)" required>
+                    <button type="submit" class="btn btn-primary fw-bold px-4">GET WEATHER</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Current Weather Hero Card -->
+        <div class="card card-custom p-4 bg-white mb-4">
+            <div class="row align-items-center">
+                <div class="col-md-7">
+                    <h2 id="resCity" class="fw-bold text-primary mb-1">Loading Weather...</h2>
+                    <div id="resTemp" class="temp-display">--°</div>
+                    <h4 id="resCond" class="text-secondary fw-semibold">Condition: —</h4>
+                </div>
+                <div class="col-md-5 text-md-end border-start border-light pt-3 pt-md-0">
+                    <p id="resHumidity" class="fs-5 mb-2">💧 Humidity: —%</p>
+                    <p id="resWind" class="fs-5 mb-2">💨 Wind Speed: —</p>
+                    <p id="resSource" class="text-muted small mb-0">📡 Engine: Open-Meteo Live API</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hourly Forecast (Next 6 Hours) -->
+        <div class="card card-custom p-4 bg-white mb-4">
+            <h5 class="fw-bold text-secondary mb-3">🕒 6-Hour Hourly Forecast</h5>
+            <div class="row g-2" id="hourlyRow">
+                <div class="col-12 text-center text-muted">Loading forecast...</div>
+            </div>
+        </div>
+
+        <!-- Daily Forecast (Next 5 Days) -->
+        <div class="card card-custom p-4 bg-white">
+            <h5 class="fw-bold text-secondary mb-3">📅 5-Day Daily Forecast</h5>
+            <div class="row g-2" id="dailyRow">
+                <div class="col-12 text-center text-muted">Loading forecast...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isMetric = true;
+        let currentWeatherData = null;
+
+        const WMO_CODES = {
+            0: { desc: "Clear sky", icon: "☀️" },
+            1: { desc: "Mainly clear", icon: "🌤️" },
+            2: { desc: "Partly cloudy", icon: "⛅" },
+            3: { desc: "Overcast", icon: "☁️" },
+            45: { desc: "Fog", icon: "🌫️" },
+            48: { desc: "Depositing rime fog", icon: "🌫️" },
+            51: { desc: "Light drizzle", icon: "🌦️" },
+            61: { desc: "Slight rain", icon: "🌧️" },
+            63: { desc: "Moderate rain", icon: "🌧️" },
+            65: { desc: "Heavy rain", icon: "🌧️" },
+            71: { desc: "Slight snow", icon: "🌨️" },
+            75: { desc: "Heavy snow", icon: "❄️" },
+            80: { desc: "Rain showers", icon: "🌦️" },
+            95: { desc: "Thunderstorm", icon: "⛈️" }
+        };
+
+        function getCondition(code) {
+            return WMO_CODES[code] || { desc: "Partly cloudy", icon: "⛅" };
+        }
+
+        function cToF(c) {
+            return (c * 9/5) + 32;
+        }
+
+        function formatTemp(valC) {
+            if (isMetric) return `${Math.round(valC)}°C`;
+            return `${Math.round(cToF(valC))}°F`;
+        }
+
+        async function fetchWeather(cityName) {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.classList.add('d-none');
+
+            try {
+                // Step 1: Geocoding
+                const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(cityName)}&count=1&language=en&format=json`;
+                const geoRes = await fetch(geoUrl);
+                const geoData = await geoRes.json();
+
+                if (!geoData.results || geoData.results.length === 0) {
+                    throw new Error(`City '${cityName}' not found. Please verify spelling.`);
+                }
+
+                const place = geoData.results[0];
+                const lat = place.latitude;
+                const lon = place.longitude;
+                const displayName = `${place.name}, ${place.country || ''}`;
+
+                // Step 2: Forecast data
+                const weatherUrl = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=temperature_2m,relativehumidity_2m,weathercode&daily=weathercode,temperature_2m_max,temperature_2m_min&timezone=auto`;
+                const weatherRes = await fetch(weatherUrl);
+                const weatherData = await weatherRes.json();
+
+                currentWeatherData = {
+                    cityName: displayName,
+                    current: weatherData.current_weather,
+                    hourly: weatherData.hourly,
+                    daily: weatherData.daily
+                };
+
+                renderUI();
+            } catch (err) {
+                alertBox.textContent = err.message || 'Failed to fetch weather data.';
+                alertBox.classList.remove('d-none');
+            }
+        }
+
+        function renderUI() {
+            if (!currentWeatherData) return;
+
+            const curr = currentWeatherData.current;
+            const cond = getCondition(curr.weathercode);
+
+            document.getElementById('resCity').textContent = currentWeatherData.cityName;
+            document.getElementById('resTemp').textContent = formatTemp(curr.temperature);
+            document.getElementById('resCond').textContent = `${cond.icon} ${cond.desc}`;
+            document.getElementById('resWind').textContent = `💨 Wind Speed: ${curr.windspeed} km/h`;
+
+            // Hourly Forecast (Next 6 Hours)
+            const hourlyRow = document.getElementById('hourlyRow');
+            const times = currentWeatherData.hourly.time;
+            const temps = currentWeatherData.hourly.temperature_2m;
+            const codes = currentWeatherData.hourly.weathercode;
+            const hums = currentWeatherData.hourly.relativehumidity_2m;
+
+            // find current hour index
+            const nowIso = new Date().toISOString().slice(0, 13);
+            let startIdx = times.findIndex(t => t.startsWith(nowIso));
+            if (startIdx < 0) startIdx = 0;
+
+            let hourlyHtml = '';
+            for (let i = startIdx; i < Math.min(startIdx + 6, times.length); i++) {
+                const hourStr = times[i].slice(11, 16);
+                const hCond = getCondition(codes[i]);
+                hourlyHtml += `
+                    <div class="col-4 col-md-2">
+                        <div class="forecast-card shadow-sm">
+                            <div class="small text-muted fw-bold">${hourStr}</div>
+                            <div class="fs-4 my-1">${hCond.icon}</div>
+                            <div class="fw-bold">${formatTemp(temps[i])}</div>
+                            <small class="text-secondary">${hums[i]}%</small>
+                        </div>
+                    </div>`;
+            }
+            hourlyRow.innerHTML = hourlyHtml;
+
+            // Daily Forecast (Next 5 Days)
+            const dailyRow = document.getElementById('dailyRow');
+            const dTimes = currentWeatherData.daily.time;
+            const maxTemps = currentWeatherData.daily.temperature_2m_max;
+            const minTemps = currentWeatherData.daily.temperature_2m_min;
+            const dCodes = currentWeatherData.daily.weathercode;
+
+            let dailyHtml = '';
+            for (let i = 0; i < Math.min(5, dTimes.length); i++) {
+                const dateObj = new Date(dTimes[i]);
+                const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+                const dCond = getCondition(dCodes[i]);
+                dailyHtml += `
+                    <div class="col-6 col-md">
+                        <div class="forecast-card shadow-sm">
+                            <div class="fw-bold text-secondary">${dayName}</div>
+                            <div class="fs-4 my-1">${dCond.icon}</div>
+                            <div class="small fw-semibold text-danger">${formatTemp(maxTemps[i])}</div>
+                            <div class="small text-primary">${formatTemp(minTemps[i])}</div>
+                            <div class="small text-muted text-truncate" style="font-size: 0.75rem;">${dCond.desc}</div>
+                        </div>
+                    </div>`;
+            }
+            dailyRow.innerHTML = dailyHtml;
+        }
+
+        document.getElementById('searchForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const city = document.getElementById('cityInput').value.trim();
+            if (city) fetchWeather(city);
+        });
+
+        document.getElementById('btnToggleUnit').addEventListener('click', function() {
+            isMetric = !isMetric;
+            this.textContent = isMetric ? 'Unit: °C (Active)' : 'Unit: °F (Active)';
+            renderUI();
+        });
+
+        document.getElementById('btnAutoLoc').addEventListener('click', async function() {
+            try {
+                const res = await fetch('https://ipapi.co/json/');
+                const data = await res.json();
+                if (data.city) {
+                    document.getElementById('cityInput').value = data.city;
+                    fetchWeather(data.city);
+                } else {
+                    fetchWeather('Mumbai');
+                }
+            } catch {
+                fetchWeather('Mumbai');
+            }
+        });
+
+        // Initial default weather
+        fetchWeather('Mumbai');
+    </script>
+</body>
+</html>

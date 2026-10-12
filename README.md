@@ -17,13 +17,23 @@ All tasks are strictly organized following the required Oasis Infobyte folder st
 
 ---
 
+## 🌐 Live Web Demonstrations
+
+Experience the live deployed applications directly in your browser:
+* 🌐 **Master Internship Portal:** [https://faizan1998sayyed.github.io/OIBSIP/](https://faizan1998sayyed.github.io/OIBSIP/)
+* ⚖️ **Task 2 (BMI Calculator) Live Demo:** [https://faizan1998sayyed.github.io/OIBSIP/Python-Task2-BMICalculator/](https://faizan1998sayyed.github.io/OIBSIP/Python-Task2-BMICalculator/)
+* 🔐 **Task 3 (Password Generator) Live Demo:** [https://faizan1998sayyed.github.io/OIBSIP/Python-Task3-PasswordGenerator/](https://faizan1998sayyed.github.io/OIBSIP/Python-Task3-PasswordGenerator/)
+* 🌤️ **Task 4 (Weather App) Live Demo:** [https://faizan1998sayyed.github.io/OIBSIP/Python-Task4-WeatherApp/](https://faizan1998sayyed.github.io/OIBSIP/Python-Task4-WeatherApp/)
+
+---
+
 ## 📂 Repository Structure & Tasks Overview
 
-| Task # | Folder Name | Project Title | Description | Tech Stack | Status |
-| :---: | :--- | :--- | :--- | :--- | :---: |
-| **Task 2** | [`Python-Task2-BMICalculator/`](./Python-Task2-BMICalculator) | **Smart BMI Calculator** | Desktop GUI & Web application for Body Mass Index calculation, WHO category classification, multi-user SQLite history, and Matplotlib trend visualization. | Python, Tkinter, SQLite3, Matplotlib | ✅ Completed |
-| **Task 3** | [`Python-Task3-PasswordGenerator/`](./Python-Task3-PasswordGenerator) | **Random Password Generator** | Cryptographically secure random password generator utilizing Python's `secrets` CS PRNG module, Shannon Bit Entropy scoring, criteria enforcement, and clipboard integration. | Python, Tkinter, `secrets`, Bootstrap 5 | ✅ Completed |
-| **Task 4** | [`Python-Task4-WeatherApp/`](./Python-Task4-WeatherApp) | **Basic Weather App** | Real-time weather dashboard with dual API fallback (Open-Meteo zero-key engine + OpenWeatherMap), 6-hour hourly forecasts, 5-day daily forecasts, °C/°F toggle, and IP geolocation. | Python, Tkinter, `requests`, REST APIs | ✅ Completed |
+| Task # | Folder Name | Project Title | Live Demo | Tech Stack | Status |
+| :---: | :--- | :--- | :---: | :--- | :---: |
+| **Task 2** | [`Python-Task2-BMICalculator/`](./Python-Task2-BMICalculator) | **Smart BMI Calculator** | [🚀 Live App](https://faizan1998sayyed.github.io/OIBSIP/Python-Task2-BMICalculator/) | Python, Tkinter, SQLite3, Chart.js | ✅ Completed |
+| **Task 3** | [`Python-Task3-PasswordGenerator/`](./Python-Task3-PasswordGenerator) | **Random Password Generator** | [🚀 Live App](https://faizan1998sayyed.github.io/OIBSIP/Python-Task3-PasswordGenerator/) | Python, `secrets` CS PRNG, Tkinter | ✅ Completed |
+| **Task 4** | [`Python-Task4-WeatherApp/`](./Python-Task4-WeatherApp) | **Basic Weather App** | [🚀 Live App](https://faizan1998sayyed.github.io/OIBSIP/Python-Task4-WeatherApp/) | Python, Tkinter, Open-Meteo REST API | ✅ Completed |
 
 ---
 

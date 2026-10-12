@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Password Generator — Live Demo</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f7fafc; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card-custom { border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border: none; }
+        .pwd-box { font-family: 'Consolas', monospace; font-size: 1.4rem; letter-spacing: 1px; font-weight: bold; background: #edf2f7; text-align: center; }
+    </style>
+</head>
+<body class="py-4">
+    <div class="container" style="max-width: 800px;">
+        <div class="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
+            <div>
+                <h3 class="fw-bold mb-0 text-primary">🔐 RANDOM PASSWORD GENERATOR</h3>
+                <small class="text-muted">OASIS INFOBYTE SIP — Task 3 • Created by Faizan Sayyed</small>
+            </div>
+            <a href="https://github.com/Faizan1998Sayyed/OIBSIP/tree/main/Python-Task3-PasswordGenerator" target="_blank" class="btn btn-outline-dark fw-bold">📂 View GitHub Code</a>
+        </div>
+
+        <!-- Generated Password Result Panel -->
+        <div class="card card-custom p-4 bg-white mb-4">
+            <h5 class="fw-bold text-secondary mb-3">Generated Password</h5>
+            <div class="input-group input-group-lg mb-3">
+                <input type="text" id="pwdOutput" class="form-control pwd-box" readonly placeholder="Generating password...">
+                <button class="btn btn-success fw-bold px-4" id="btnCopy">📋 Copy</button>
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-1">
+                <span id="lblStrength" class="fw-bold text-muted">Strength: —</span>
+                <span id="lblEntropy" class="text-secondary small">Entropy: 0.0 bits</span>
+            </div>
+            <div class="progress" style="height: 12px;">
+                <div id="progBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;"></div>
+            </div>
+        </div>
+
+        <!-- Criteria & Controls -->
+        <div class="card card-custom p-4 bg-white mb-4">
+            <h5 class="fw-bold text-secondary mb-3">Password Controls & Criteria</h5>
+            <div id="alertBox" class="alert alert-danger d-none mb-3"></div>
+            
+            <form id="genForm">
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between">
+                        <label class="form-label fw-bold">Password Length (min 8):</label>
+                        <span id="lenVal" class="fw-bold text-primary fs-5">16</span>
+                    </div>
+                    <input type="range" class="form-range" id="lengthRange" min="8" max="64" value="16">
+                </div>
+
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="chkUpper" checked>
+                            <label class="form-check-label fw-semibold" for="chkUpper">Uppercase Letters (A-Z)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="chkLower" checked>
+                            <label class="form-check-label fw-semibold" for="chkLower">Lowercase Letters (a-z)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="chkDigits" checked>
+                            <label class="form-check-label fw-semibold" for="chkDigits">Numbers (0-9)</label>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="chkSymbols" checked>
+                            <label class="form-check-label fw-semibold" for="chkSymbols">Symbols (!@#$...)</label>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="chkAmbiguous">
+                            <label class="form-check-label text-danger fw-semibold" for="chkAmbiguous">Exclude Ambiguous Characters (0, O, o, 1, l, I, |)</label>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg w-100 fw-bold">🔄 GENERATE SECURE PASSWORD</button>
+            </form>
+        </div>
+
+        <!-- Recent Passwords in Session -->
+        <div class="card card-custom p-4 bg-white">
+            <h5 class="fw-bold text-secondary mb-3">Recent Passwords in This Session</h5>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Password</th>
+                            <th>Length</th>
+                            <th>Strength</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody">
+                        <tr><td colspan="4" class="text-center text-muted">No recent passwords.</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <small class="text-muted">🔒 Session memory only — zero disk storage for security.</small>
+        </div>
+    </div>
+
+    <script>
+        const UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const LOWER = 'abcdefghijklmnopqrstuvwxyz';
+        const DIGITS = '0123456789';
+        const SYMBOLS = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+        const AMBIGUOUS = '0Oo1lI|';
+
+        let sessionHistory = [];
+
+        function getCryptoRandomInt(max) {
+            const arr = new Uint32Array(1);
+            window.crypto.getRandomValues(arr);
+            return arr[0] % max;
+        }
+
+        function calculateEntropy(length, poolSize) {
+            if (poolSize <= 0) return 0;
+            return length * (Math.log2(poolSize));
+        }
+
+        function evaluateStrength(entropy, length) {
+            if (length < 10 || entropy < 40) return { label: 'Weak', class: 'bg-danger', width: 25 };
+            if (entropy < 60) return { label: 'Medium', class: 'bg-warning', width: 50 };
+            if (entropy < 80) return { label: 'Strong', class: 'bg-success', width: 75 };
+            return { label: 'Very Strong / Bulletproof', class: 'bg-primary', width: 100 };
+        }
+
+        function generatePassword() {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.classList.add('d-none');
+
+            const length = parseInt(document.getElementById('lengthRange').value);
+            const useUpper = document.getElementById('chkUpper').checked;
+            const useLower = document.getElementById('chkLower').checked;
+            const useDigits = document.getElementById('chkDigits').checked;
+            const useSymbols = document.getElementById('chkSymbols').checked;
+            const excludeAmb = document.getElementById('chkAmbiguous').checked;
+
+            const selectedPools = [];
+            let fullPool = '';
+
+            const filterChars = str => excludeAmb ? str.split('').filter(c => !AMBIGUOUS.includes(c)).join('') : str;
+
+            if (useUpper) { const s = filterChars(UPPER); selectedPools.push(s); fullPool += s; }
+            if (useLower) { const s = filterChars(LOWER); selectedPools.push(s); fullPool += s; }
+            if (useDigits) { const s = filterChars(DIGITS); selectedPools.push(s); fullPool += s; }
+            if (useSymbols) { const s = filterChars(SYMBOLS); selectedPools.push(s); fullPool += s; }
+
+            if (selectedPools.length < 2) {
+                alertBox.textContent = 'Please select at least 2 character types for security.';
+                alertBox.classList.remove('d-none');
+                return;
+            }
+
+            // Guaranteed character from each selected class
+            let chars = [];
+            selectedPools.forEach(p => {
+                chars.push(p[getCryptoRandomInt(p.length)]);
+            });
+
+            // Fill remaining length
+            while (chars.length < length) {
+                chars.push(fullPool[getCryptoRandomInt(fullPool.length)]);
+            }
+
+            // Fisher-Yates shuffle with crypto PRNG
+            for (let i = chars.length - 1; i > 0; i--) {
+                const j = getCryptoRandomInt(i + 1);
+                const tmp = chars[i];
+                chars[i] = chars[j];
+                chars[j] = tmp;
+            }
+
+            const password = chars.join('');
+            const entropy = calculateEntropy(length, fullPool.length);
+            const strength = evaluateStrength(entropy, length);
+
+            document.getElementById('pwdOutput').value = password;
+            document.getElementById('lblStrength').textContent = 'Strength: ' + strength.label;
+            document.getElementById('lblEntropy').textContent = `Entropy: ${entropy.toFixed(1)} bits`;
+
+            const prog = document.getElementById('progBar');
+            prog.className = 'progress-bar progress-bar-striped progress-bar-animated ' + strength.class;
+            prog.style.width = strength.width + '%';
+
+            // Add to session history
+            sessionHistory.unshift({ password, length, strength: strength.label });
+            if (sessionHistory.length > 5) sessionHistory.pop();
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const tbody = document.getElementById('historyBody');
+            if (sessionHistory.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center text-muted">No recent passwords.</td></tr>';
+                return;
+            }
+            tbody.innerHTML = sessionHistory.map(item => `
+                <tr>
+                    <td><code>${item.password}</code></td>
+                    <td>${item.length}</td>
+                    <td><span class="badge bg-secondary">${item.strength}</span></td>
+                    <td><button class="btn btn-sm btn-outline-primary" onclick="copyText('${item.password}')">Copy</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function copyText(txt) {
+            navigator.clipboard.writeText(txt).then(() => {
+                alert('Copied to clipboard: ' + txt);
+            });
+        }
+
+        document.getElementById('lengthRange').addEventListener('input', function() {
+            document.getElementById('lenVal').textContent = this.value;
+        });
+
+        document.getElementById('genForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            generatePassword();
+        });
+
+        document.getElementById('btnCopy').addEventListener('click', function() {
+            const val = document.getElementById('pwdOutput').value;
+            if (val) copyText(val);
+        });
+
+        // Generate initial password on launch
+        generatePassword();
+    </script>
+</body>
+</html>
